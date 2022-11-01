@@ -1,6 +1,16 @@
-% Predicados no relacionados a TDAs (Auxiliares)
 % -------------------------------------------------------------
-% Lista, Indice, Elemento deseado, lista final
+% |Predicados no relacionados a TDAs (Auxiliares)             |
+% -------------------------------------------------------------
+
+% Clausulas:
+
+% Reglas:
+
+% Predicados:
+
+% Descripción: Predicado que permite remplazar un elemento de una lista por otro.
+% Dominio: Lista X Elemento X Elemento X Lista.
+% Ej: Lista, Indice, Elemento deseado, lista final
 replace([_|T], 0, X, [X|T]).
 replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
 replace(L, _, _, L).
@@ -10,26 +20,160 @@ replace(L, _, _, L).
 append_final([], X, [X]).
 append_final([H|T], X, [H|L]) :- append_final(T, X, L).
 
+% Descripción: Obtener un elemento de una lista por su índice
+% Dominio: Lista X Indice X Elemento
+getbyIndex(0, [X], X) :- !.
+getbyIndex(0, [H|_], H) :- !.
+getbyIndex(I, [_|T], E) :- 
+    NuevoIndex is I-1, 
+    getbyIndex(NuevoIndex, T, E), !.
 
+% Descripción: Predicado que agrega un elemento al final de una lista.
+% Dominio: Lista X any X Lista
+append_final([], X, [X]).
+append_final([H|T], X, [H|L]) :- append_final(T, X, L).
 
+% Descripción: Predicado que elimina el elemento posicionado al final de una lista.
+% Dominio: Lista X Lista
+deleteLastElement([_], []) :- !.
+deleteLastElement([Head, Next|Tail], [Head|NTail]):-
+  deleteLastElement([Next|Tail], NTail).
 
+%------------------------------------------------------------------------------------------------------------------------------
 
-%2 - TD1: Constructor1
+% ------------------------------------------------------------
+% |TDA: Imagen                                               |
+% ------------------------------------------------------------
+
+/* Descripción: El TDA Imagen se representa a traves de una lista que almacena elementos del tipo entero, correspondiendo a la anchura
+y altura de la imagen, además de una lista de listas que almacena los pixeles dentro. */
+
+/* Dominio: 
+    - Anchura: Entero 
+    - Altura: Entero
+    - Pix: Lista de listas de pixeles
+    - Imagen: Estructura */
+
+/* Predicados:  
+    - imagen(Anchura, Altura, Pix, Imagen)                              Aridad: 4.
+    - getAnchura(Imagen, Anchura)                                       Aridad: 2.
+    - getAltura(Imagen, Altura)                                         Aridad: 2.
+    - getPix(Imagen, Pix)                                               Aridad: 2. 
+    - pixbit(X,Y,Bit,Depth,Pix)                                         Aridad: 5.  
+    - isPixBit(Pix)                                                     Aridad: 1.
+    - c(X)                                                              Aridad: 1.
+    - pixrgb(X, Y, R, G, B, Depth, Pix)                                 Aridad: 7.
+    - isPixRGB(Pix)                                                     Aridad: 1.
+    - pixHex(X, Y, Hex, Depth, Pix)                                     Aridad: 5.
+    - isPixHex(Pix)                                                     Aridad: 1.
+    - isBitmapAux([Lista])                                              Aridad: 1.
+    - isBitmap(Imagen)                                                  Aridad: 1.
+    - isRGBmapAux([Lista])                                              Aridad: 1.
+    - isRGBmap(Imagen)                                                  Aridad: 1.
+    - isHexmapAux([Lista])                                              Aridad: 1.
+    - isHexmap(Imagen)                                                  Aridad: 1.
+    - restH(Imagen, Z)                                                  Aridad: 2.
+    - restV(Imagen, Z)                                                  Aridad: 2.
+    - newcoordH(RestH, Pix, NewX)                                       Aridad: 3.
+    - newcoordV(RestV, Pix, NewY)                                       Aridad: 3.
+    - modificarCoordenadaAuxH(RestH, Pix, NewPix)                       Aridad: 3.
+    - modificarCoordenadaAux2H(RestH, [H|T], [NH|NT])                   Aridad: 3.
+    - flipH(Imagen, NewImagen)                                          Aridad: 2.
+    - modificarCoordenadaAuxV(RestV, Pix, NewPix)                       Aridad: 3.
+    - modificarCoordenadaAux2V(RestV, [H|T], [NH|NT])                   Aridad: 3.
+    - flipV(Imagen, NewImagen)                                          Aridad: 2.
+    - CropAux1(Pix, X1, Y1, X2, Y2, NewPix)                             Aridad: 6.
+    - CropAux2(Pix, X1, Y1, X2, Y2, NewPix)                             Aridad: 6.
+    - Crop(Imagen, X1, Y1, X2, Y2, NewImagen)                            Aridad: 6.
+    - byteToHex(Byte, Hex)                                              Aridad: 2.
+    - rgbToHex([H|T], [H1|T1])                                          Aridad: 2.
+    - imageRGBtoHex(Image, ImageHex)                                    Aridad: 2.
+    - countColor(Pix, Color, Count)                                     Aridad: 3.
+    - histogramaux([H|T], [H1|T1])                                      Aridad: 2.
+    - imageToHistogram(Image, Histogram)                                Aridad: 2. 
+    - rotate90Aux(Pix, NewPix)                                          Aridad: 2.
+    - rotate90Aux2([H|T], [H1|T1])                                      Aridad: 2.
+    - rotate90(Imagen, NewImagen)                                       Aridad: 2.
+    */
+
+/* Metas primarias:
+    - imagen.
+    - isBitmap.
+    - isRGBmap.
+    - isHexmap.
+    - flipH.
+    - flipV.
+    - Crop.
+    - imageRGBtoHex.
+    - imageToHistogram.
+    - rotate90.
+*/
+
+/* Metas segundarias:
+    - getAnchura.
+    - getAltura.
+    - getPix.
+    - pixbit.
+    - isPixBit.
+    - c.
+    - pixrgb.
+    - isPixRGB.
+    - pixHex.
+    - isPixHex.
+    - isBitmapAux.
+    - isRGBmapAux.
+    - isHexmapAux.
+    - restH.
+    - restV.
+    - newcoordH.
+    - newcoordV.
+    - modificarCoordenadaAuxH.
+    - modificarCoordenadaAux2H.
+    - modificarCoordenadaAuxV.
+    - modificarCoordenadaAux2V.
+    - CropAux1.
+    - CropAux2.
+    - byteToHex.
+    - rgbToHex.
+    - countColor.
+    - histogramaux.
+    - rotate90Aux.
+    - rotate90Aux2.
+*/
+
+% Clausulas:
+
+% Reglas:
+
+% Predicados: 
+
 imagen(Anchura,Altura,Pix,Imagen):-
     integer(Altura),
     integer(Anchura),
     Imagen = [Anchura,Altura,Pix].
 
+% Descripción: Predicado que obtiene la anchura de una imagen.
+% Dominio: Imagen X Anchura.
 getAnchura(Imagen, Anchura) :-
     getbyIndex(0, Imagen, Anchura).
 
+% Descripción: Predicado que obtiene la altura de una imagen.
+% Dominio: Imagen X Altura.
 getAltura(Imagen, Altura) :-
     getbyIndex(1, Imagen, Altura).
 
-%Pix necesarios:
-%Se utiliza una variable anonima para llamar cuantas veces se quiera.
+% Descripción: Predicado que obtiene los pixeles de una imagen.
+% Dominio: Imagen X Pix.
+getPix(Imagen, Pix) :-
+    getbyIndex(2, Imagen, Pix).
 
-%pix1: pixbit
+
+%Pix necesarios:
+
+% pix1: pixbit
+
+% Descripción: Predicado que permite obtener la estrucura de un pixbit.
+% Dominio: Entero X Entero X Entero X Entero X Pixbit.
 pixbit(X,Y,Bit,Depth,Pix):-
     integer(X),
     integer(Y),
@@ -38,6 +182,8 @@ pixbit(X,Y,Bit,Depth,Pix):-
     integer(Depth),
     Pix = [X,Y,Bit,Depth], !.
 
+% Descripción: Predicado que permite confirmar si un elemento es un pixbit.
+% Dominio: Pixbit.
 isPixbit(Pix) :-
     length(Pix, Largo),
     Largo =:= 4,
@@ -47,8 +193,12 @@ isPixbit(Pix) :-
 
 %pix2: pixrgb
 
+% Descripción: Predicado que permite confirmar si un elemento X se encuentra dentro del rango 0 < X < 255.
+% Dominio: Entero.
 c(X):- integer(X), X >= 0, X =< 255.
 
+% Descripción: Predicado que permite obtener la estrucura de un pixrgb.
+% Dominio: Entero X Entero X Entero X Entero X Pixrgb.
 pixrgb(X,Y,R,G,B,Depth,Pix):-
     integer(X),
     integer(Y),
@@ -58,12 +208,17 @@ pixrgb(X,Y,R,G,B,Depth,Pix):-
     integer(Depth),
     Pix = [X,Y,R,G,B,Depth], !.
 
+% Descripción: Predicado que permite confirmar si un elemento es un pixrgb.
+% Dominio: Pix.
 isPixRGB(Pix) :-
     length(Pix, Largo),
     Largo =:= 6.
 
 
 %pix3: pixhex
+
+% Descripción: Predicado que permite obtener la estrucura de un pixhex.
+% Dominio: Entero X Entero X Atom X Entero X Pixhex.
 pixhex(X,Y,Hex,Depth,Pix):-
     integer(X),
     integer(Y),
@@ -71,6 +226,8 @@ pixhex(X,Y,Hex,Depth,Pix):-
     integer(Depth),
     Pix = [X,Y,Hex,Depth], !.
 
+% Descripción: Predicado que permite confirmar si un elemento es un pixhex.
+% Dominio: Pix.
 isHex(Pix) :-
     length(Pix, Largo),
     Largo =:= 4,
@@ -79,53 +236,60 @@ isHex(Pix) :-
 
 %------------------------------------------------------------------------------------------------------------------------------
 
-%3 - TDA image - is bitmap / imageIsBitmap: boolean
-%Las funciones se llaman predicados!!!
-%Aqui se comprueba que los añadidos sean pixbits
+% TDA image - is bitmap / imageIsBitmap.
 
-%% Obtener un elemento de una lista por su índice
-getbyIndex(0, [X], X) :- !.
-getbyIndex(0, [H|_], H) :- !.
-getbyIndex(I, [_|T], E) :- 
-    NuevoIndex is I-1, 
-    getbyIndex(NuevoIndex, T, E), !.
+% Descripción: Predicado que permite confirmar si una imagen esta compuesta por pixbits.
+% Dominio: Imagen.
+% Recorrido: Boolean.
 
-
-% Recursión
+% Descripción: Predicado que permite realizar la recursión con todos los elementos de una lista. Permite confirmar si el elemento
+% analizado es un pixbit.
 isBitmapAux([]) :- !.
 isBitmapAux([H|T]) :-
     isPixbit(H),
     isBitmapAux(T).
 
-% Predicado final que solamente envuelve la recursión
+% Predicado final que solamente envuelve la recursión. Permite confirmar si una imagen es un bitmap.
 isBitmap(Imagen) :-
     getbyIndex(2, Imagen, Bits),
     isBitmapAux(Bits).
 
 %------------------------------------------------------------------------------------------------------------------------------
 
-%4 - TDA image - is rgbmap / imageIsPixmap: boolean
+%4 - TDA image - is rgbmap / imageIsPixmap.
 
-% Recursión
+% Descripción: Predicado que permite confirmar si una imagen esta compuesta por pixrgb.
+% Dominio: Imagen.
+% Recorrido: Boolean.
+
+% Descripción: Predicado que permite realizar la recursión con todos los elementos de una lista. Permite confirmar si el elemento
+% analizado es un pixrgb.
 isRGBmapAux([]) :- !.
 isRGBmapAux([H|T]) :-
     isPixRGB(H),
     isRGBmapAux(T).
 
+% Predicado final que solamente envuelve la recursión. Permite confirmar si una imagen es un rgbmap.
 isRGBmap(Imagen) :-
     getbyIndex(2, Imagen, RGBs),
     isRGBmapAux(RGBs).
 
 %------------------------------------------------------------------------------------------------------------------------------
 
-%5 - TDA image - is hexmap / imageIsHexmap: boolean
+%5 - TDA image - is hexmap / imageIsHexmap
 
-% Recursión
+% Descripción: Predicado que permite confirmar si una imagen esta compuesta por pixhex.
+% Dominio: Imagen.
+% Recorrido: Boolean.
+
+% Descripción: Predicado que permite realizar la recursión con todos los elementos de una lista. Permite confirmar si el elemento
+% analizado es un pixhex.
 isHexmapAux([]) :- !.
 isHexmapAux([H|T]) :-
     isHex(H),
     isHexmapAux(T).
 
+% Predicado final que solamente envuelve la recursión. Permite confirmar si una imagen es un hexmap.
 isHexmap(Imagen) :-
     getbyIndex(2, Imagen, Hexs),
     isHexmapAux(Hexs).
@@ -133,62 +297,86 @@ isHexmap(Imagen) :-
 %------------------------------------------------------------------------------------------------------------------------------
 %6 - TDA image - flipH / imageFlipH:
 
-% Descripción: Predicado que invierte el orden de una lista.
-% Dominio: Lista X Lista X Lista
+% Descripción: Predicado que permite voltear una imagen horizontalmente.
+% Para obtener las nuevas coordenadas de las imagenes se realiza la siguiente operación matematica:
+%   (Anchura - 1) = z
+%   z - x = Nueva cordenada
+% Al obtener la nueva coordenada, esta debe remplazarse dentro de la lista de pixeles en la estructura de la imagen.
+% Dominio: Lista X Lista
 
-% (Anchura - 1) = z
-% z - x = Nueva cordenada
+% Descripción: Nos permite obtener un valor Z el cual sera utilizado para restar a la coordenada X actual de un pixel.
+% Dominio: Entero X Entero
 restH(Imagen, Z) :-
     getAnchura(Imagen, Anchura),
     Z is Anchura - 1.
 
+% Descripción: Predicado que permite obtener la nueva coordenada X de un pixel.
+% Dominio: Entero X Entero X Entero
 newcoordH(RestH, Pix, NewX):-
     getbyIndex(0, Pix, X),
     NewX is RestH - X.
 
-modificarCoordenadaAux(RestH, Pix, NewPix) :-
+% Descripción: Permite modificar la coordenada X de un pixel.
+% Dominio: Entero X Lista X Lista
+modificarCoordenadaAuxH(RestH, Pix, NewPix) :-
     newcoordH(RestH, Pix, NewX),
     replace(Pix, 0, NewX, NewPix), !.
 
-modificarCoordenadaAux2(_ ,[], []) :- !.
-modificarCoordenadaAux2(RestH, [H|T], [NewH|NewT]) :-
-    modificarCoordenadaAux(RestH, H, NewH),
-    modificarCoordenadaAux2(RestH, T, NewT).
+% Descripción: Predicado que permite realizar la recursión con todos los elementos de una lista.
+% Dominio: Entero X Lista X Lista
+modificarCoordenadaAux2H(_ ,[], []) :- !.
+modificarCoordenadaAux2H(RestH, [H|T], [NewH|NewT]) :-
+    modificarCoordenadaAuxH(RestH, H, NewH),
+    modificarCoordenadaAux2H(RestH, T, NewT).
 
+% Predicado final que solamente envuelve la recursión. Permite modificar las coordenadas X de todos los pixeles de una imagen.
 flipH(Imagen, NewImagen) :-
     restH(Imagen, RestH),
     getbyIndex(2, Imagen, Pixs),
-    modificarCoordenadaAux2(RestH, Pixs, NewPixs),
+    modificarCoordenadaAux2H(RestH, Pixs, NewPixs),
     replace(Imagen, 2, NewPixs, NewImagen).
 
 %------------------------------------------------------------------------------------------------------------------------------
 
 %7 - TDA image - flipV / imageFlipV:
 
-% (Altura - 1) = z
-% z - y = Nueva cordenada
+% Descripción: Predicado que permite voltear una imagen verticalmente.
+% Para obtener las nuevas coordenadas de las imagenes se realiza la siguiente operación matematica:
+%   (Altura - 1) = z
+%   z - y = Nueva cordenada
+% Al obtener la nueva coordenada, esta debe remplazarse dentro de la lista de pixeles en la estructura de la imagen.
+% Dominio: Lista X Lista
 
+% Descripción: Nos permite obtener un valor Z el cual sera utilizado para restar a la coordenada Y actual de un pixel.
+% Dominio: Entero X Entero
 restV(Imagen, Z) :-
     getAltura(Imagen, Altura),
     Z is Altura - 1.
 
-newcoordV(RestV, NewY):-
+% Descripción: Predicado que permite obtener la nueva coordenada Y de un pixel.
+% Dominio: Entero X Entero X Entero
+newcoordV(RestV, Pix, NewY):-
     getbyIndex(1, Pix, Y),
     NewY is RestV - Y.
 
-modificarCoordenadaAux(RestV, Pix, NewPix) :-
+% Descripción: Permite modificar la coordenada Y de un pixel.
+% Dominio: Entero X Lista X Lista
+modificarCoordenadaAuxV(RestV, Pix, NewPix) :-
     newcoordV(RestV, NewY),
     replace(Pix, 1, NewY, NewPix), !.
 
-modificarCoordenadaAux2(_ ,[], []) :- !.
-modificarCoordenadaAux2(RestV, [H|T], [NewH|NewT]) :-
-    modificarCoordenadaAux(RestV, H, NewH),
-    modificarCoordenadaAux2(RestV, T, NewT).
+% Descripción: Predicado que permite realizar la recursión con todos los elementos de una lista.
+% Dominio: Entero X Lista X Lista
+modificarCoordenadaAux2V(_ ,[], []) :- !.
+modificarCoordenadaAux2V(RestV, [H|T], [NewH|NewT]) :-
+    modificarCoordenadaAuxV(RestV, H, NewH),
+    modificarCoordenadaAux2V(RestV, T, NewT).
 
+% Predicado final que solamente envuelve la recursión. Permite modificar las coordenadas Y de todos los pixeles de una imagen.
 flipV(Imagen, NewImagen) :-
     restV(Imagen, RestV),
     getbyIndex(2, Imagen, Pixs),
-    modificarCoordenadaAux2(RestV, Pixs, NewPixs),
+    modificarCoordenadaAux2V(RestV, Pixs, NewPixs),
     replace(Imagen, 2, NewPixs, NewImagen).
 
 
@@ -197,10 +385,52 @@ flipV(Imagen, NewImagen) :-
 %8 - TDA image - Crop / imageCrop:
 
 % Descripción: Predicado que recorta una imagen en base a las coordenadas de un pixel.
-% Dominio: Imagen X Imagen X Entero X Entero X Entero X Entero
-% Imagen: Imagen a recortar. Imagen: Imagen recortada. Entero: Coordenada X del pixel. Entero: Coordenada Y del pixel. Entero: Ancho del recorte. Entero: Alto del recorte.
+% Dominio: Imagen X Entero X Entero X Entero X Entero X Imagen
+% Imagen: Imagen a recortar. Entero: Coordenada X1 del pixel. Entero: Coordenada Y1 del pixel. Entero: Coordenada X2 del pixel. Entero: Coordenada Y2 del pixel.
+% Imagen: Imagen recortada.
 
+% Nota: 
+% -Se asume que el pixel está dentro de la imagen.
+% -Se asume que el recorte no sobrepasa los límites de la imagen.
 
+% Para lograr esto, se debe obtener la altura y anchura de la imagen, y luego se debe obtener la altura y anchura del recorte. Luego se debe obtener la coordenada 
+% X1 y Y1 del pixel, y con esto se debe obtener la coordenada X2 y Y2 del pixel. Finalmente, se debe obtener la lista de pixeles de la imagen, y con esto se debe 
+% obtener la lista de pixeles del recorte.
+% Para obtener la lista de pixeles del recorte, se debe recorrer la lista de pixeles de la imagen, y con cada pixel se debe verificar si está dentro del recorte. 
+% Si está dentro del recorte, se debe agregar a la lista de pixeles del recorte. Finalmente, se debe crear la imagen recortada con la lista de pixeles del recorte.
+% Para verificar si un pixel está dentro del recorte, se debe obtener la coordenada X y Y del pixel, y con esto se debe verificar si está dentro del recorte. 
+% Para esto, se debe verificar si la coordenada X está entre X1 y X2, y si la coordenada Y está entre Y1 y Y2.
+
+% Si la imagen recortada no tiene origen en las cordenadas (0,0), se debe realiar un traslado de la imagen recortada.
+% Si la imagen recortada no tiene pixeles, se debe crear una imagen vacía.
+
+% Descripción: Predicado que permite obtener los pixeles de una imagen que están dentro de un recorte.
+% Dominio: Lista X Entero X Entero X Entero X Entero X Lista
+cropAux1(Pix, X1, Y1, X2, Y2, Newpix):-
+    getbyIndex(0, Pix, X),
+    getbyIndex(1, Pix, Y),
+    X >= X1,
+    X =< X2,
+    Y >= Y1,
+    Y =< Y2,
+    Newpix = Pix, !.
+
+%Descripción: Predicado que permite realizar la recursión con todos los elementos de una lista.
+% Dominio: Lista X Entero X Entero X Entero X Entero X Lista
+cropAux2([], _, _, _, _, []) :- !.
+cropAux2([H|T], X1, Y1, X2, Y2, [NewH|NewT]) :-
+    cropAux1(H, X1, Y1, X2, Y2, NewH),
+    cropAux2(T, X1, Y1, X2, Y2, NewT).
+
+% Predicado final que envuelve la recursión. Otorga una nueva imagenes con la nueva anchura, altura y lista de pixeles.
+crop(Imagen, X1, Y1, X2, Y2, NewImagen) :-
+    getAltura(Imagen, Altura),
+    getAnchura(Imagen, Anchura),
+    getbyIndex(2, Imagen, Pixs),
+    cropAux2(Pixs, X1, Y1, X2, Y2, NewPixs),
+    NewAltura is Y2 - Y1,
+    NewAnchura is X2 - X1,
+    NewImagen = [NewAltura, NewAnchura, NewPixs].
 
 %------------------------------------------------------------------------------------------------------------------------------
 
@@ -238,6 +468,8 @@ byteToHex(13, 'D') :- !.
 byteToHex(14, 'E') :- !.
 byteToHex(15, 'F') :- !.
 
+% Descrición: Predicado que permite transformar un decimal a Hex.
+% Dominio: Entero X Entero
 byteToHex(Decimal, Hex) :-
     Decimal > 15,
     Div is Decimal / 16,
@@ -248,7 +480,8 @@ byteToHex(Decimal, Hex) :-
     byteToHex(Decimal3, Hex2),
     atom_concat(Hex1, Hex2, Hex).
 
-% Recursión
+% Descripción: Predicado que envuelve la recursión. Transforma una lista de bytes RGB a Hex.
+% Dominio: Lista X Lista
 rgbToHex([], []) :- !.
 rgbToHex([H|T], [H1|T1]) :-
     getbyIndex(0, H, X),
@@ -265,6 +498,8 @@ rgbToHex([H|T], [H1|T1]) :-
     pixhex(X, Y, Hex, Depth, H1),
     rgbToHex(T, T1).
 
+% Descripción: Predicado que envuelve la recursión. Transforma una imagen RGB a Hex.
+% Dominio: Imagen X Imagen
 imageRGBtoHex(Imagen, ImagenHex) :-
     getbyIndex(2, Imagen, Pixs),
     rgbToHex(Pixs, PixsH),
@@ -281,23 +516,52 @@ imageRGBtoHex(Imagen, ImagenHex) :-
 % Imagen: Imagen a convertir. Histograma: Histograma de la imagen.
 
 % Recomendacciones:
-% - Reconocer cuantos colores hay.
+% - Reconocer cuantos colores hay en cada Imagen.
 % - Crear un predicado que permita contar cuantas veces aparece un color en la imagen.
-% 
+% - Los colores se encuentran presenten en los pix del TDA imagen. Por lo tanto se debe crear un predicado que permita obtener
+% los colores perteneciente a cada pix.
+% - En pixbit el color se obtiene cuando el bit es 1.
+% - En pixhex el color se obtiene a partir del atom Hex.
+% - En pixrgb el color se obtiene a partir de los valores R, G y B. Como se ha creado un predicado que permie transformar un pixrgb
+% a un pixhex, se puede utilizar este predicado para obtener el color de manera más sencilla.
 
+% Descripción: Predicado que permite obtener cuantas veces un color se repite en una lista de pix.
+% Dominio: Lista X Color X Entero
+countColor([], _, 0) :- !.
+countColor([H|T], Color, Count):-
+    getbyIndex(2, H, Color),
+    countColor(T, Color, Count1),
+    Count is Count1 + 1, !.
 
+countColor([_|T], Color, Count):-
+    countColor(T, Color, Count).
 
+% Descripción: Predicado que permite realizar la recursión con todos los elementos de la lista de pix.
+% Dominio: Lista X Lista.
+histogramaux([],[]):-!
+histogramaux([H|T],[H1|T1]):-
+    getbyIndex(2, H, Color),
+    countColor([H|T], Color, Count),
+    H1 = [Color, Count],
+    delete([H|T], H, NewT),
+    histogramaux(NewT, T1).
 
+% Predicado final que envuelve la recursión. Se obitiene el mayor numero entregando el histograma.
+imageToHistogram(Imagen, Histograma):-
+    getbyIndex(2, Imagen, Pixs),
+    histogramaux(Pixs, Histograma).
 
 %------------------------------------------------------------------------------------------------------------------------------
 
 %11 - TDA image - Rotate / imageRotate90:
 
-% Descripción: Predicado que rota una imagen en base a un ángulo.
+% Descripción: Predicado que rota una imagen en un angulo de 90 grados.
+% Para esto se utiliza la rotación de coordenadas dentro de un plano cartesiano. Se utiliza la formula:
+%   (x,y) = (-y,x).
 % Dominio: Imagen X Imagen
-% Imagen: Imagen a rotar. Imagen: Imagen rotada. Entero: Ángulo de rotación.
+% Imagen: Imagen a rotar. Imagen: Imagen rotada.
 
-% Rotación en 90° es (x,y) = (-y,x).
+
 rotate90Aux(Pix, NewPix) :-
     getbyIndex(0, Pix, X),
     getbyIndex(1, Pix, Y),
