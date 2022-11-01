@@ -1,8 +1,30 @@
+% Predicados no relacionados a TDAs (Auxiliares)
+% -------------------------------------------------------------
+% Lista, Indice, Elemento deseado, lista final
+replace([_|T], 0, X, [X|T]).
+replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
+replace(L, _, _, L).
+
+% Descripción: Predicado que agrega un elemento al final de una lista.
+% Dominio: Lista X any X Lista
+append_final([], X, [X]).
+append_final([H|T], X, [H|L]) :- append_final(T, X, L).
+
+
+
+
+
 %2 - TD1: Constructor1
-imagen(Altura,Anchura,Pix,Imagen):-
+imagen(Anchura,Altura,Pix,Imagen):-
     integer(Altura),
     integer(Anchura),
-    Imagen = [Altura,Anchura,Pix].
+    Imagen = [Anchura,Altura,Pix].
+
+getAnchura(Imagen, Anchura) :-
+    getbyIndex(0, Imagen, Anchura).
+
+getAltura(Imagen, Altura) :-
+    getbyIndex(1, Imagen, Altura).
 
 %Pix necesarios:
 %Se utiliza una variable anonima para llamar cuantas veces se quiera.
@@ -42,7 +64,6 @@ isPixRGB(Pix) :-
 
 
 %pix3: pixhex
-
 pixhex(X,Y,Hex,Depth,Pix):-
     integer(X),
     integer(Y),
@@ -110,7 +131,6 @@ isHexmap(Imagen) :-
     isHexmapAux(Hexs).
 
 %------------------------------------------------------------------------------------------------------------------------------
-
 %6 - TDA image - flipH / imageFlipH:
 
 % Descripción: Predicado que invierte el orden de una lista.
@@ -118,24 +138,28 @@ isHexmap(Imagen) :-
 
 % (Anchura - 1) = z
 % z - x = Nueva cordenada
-
-restH(Z) :-
-    getbyIndex(1, Imagen, Anchura),
+restH(Imagen, Z) :-
+    getAnchura(Imagen, Anchura),
     Z is Anchura - 1.
 
-newcoordH(NewX):-
+newcoordH(RestH, Pix, NewX):-
     getbyIndex(0, Pix, X),
-    restH(Z),
-    NewX is Z - X.
+    NewX is RestH - X.
 
-replace(_, _, [], []) :- !.
-replace(O, R, [O|T], [R|NT]) :- !, replace(O, R, T, NT).
-replace(O, R, [H|T], [H|NT]) :- H /= O, replace(O, R, T, NT).
+modificarCoordenadaAux(RestH, Pix, NewPix) :-
+    newcoordH(RestH, Pix, NewX),
+    replace(Pix, 0, NewX, NewPix), !.
 
-flipH(Imagen, ImagenH):-
-    newcoordH(NewX),
-    replace(X, NewX, Pix, NewPix),
-    ImagenH = [Altura,Anchura,NewPix].
+modificarCoordenadaAux2(_ ,[], []) :- !.
+modificarCoordenadaAux2(RestH, [H|T], [NewH|NewT]) :-
+    modificarCoordenadaAux(RestH, H, NewH),
+    modificarCoordenadaAux2(RestH, T, NewT).
+
+flipH(Imagen, NewImagen) :-
+    restH(Imagen, RestH),
+    getbyIndex(2, Imagen, Pixs),
+    modificarCoordenadaAux2(RestH, Pixs, NewPixs),
+    replace(Imagen, 2, NewPixs, NewImagen).
 
 %------------------------------------------------------------------------------------------------------------------------------
 
@@ -144,19 +168,29 @@ flipH(Imagen, ImagenH):-
 % (Altura - 1) = z
 % z - y = Nueva cordenada
 
-restV(Z) :-
-    getbyIndex(0, Imagen, Altura),
+restV(Imagen, Z) :-
+    getAltura(Imagen, Altura),
     Z is Altura - 1.
 
-newcoordV(NewY):-
+newcoordV(RestV, NewY):-
     getbyIndex(1, Pix, Y),
-    restV(Z),
-    NewY is Z - Y.
+    NewY is RestV - Y.
 
-flipV(Imagen, ImagenV):-
-    newcoordV(NewY),
-    replace(Y, NewY, Pix, NewPix),
-    ImagenV = [Altura,Anchura,NewPix].
+modificarCoordenadaAux(RestV, Pix, NewPix) :-
+    newcoordV(RestV, NewY),
+    replace(Pix, 1, NewY, NewPix), !.
+
+modificarCoordenadaAux2(_ ,[], []) :- !.
+modificarCoordenadaAux2(RestV, [H|T], [NewH|NewT]) :-
+    modificarCoordenadaAux(RestV, H, NewH),
+    modificarCoordenadaAux2(RestV, T, NewT).
+
+flipV(Imagen, NewImagen) :-
+    restV(Imagen, RestV),
+    getbyIndex(2, Imagen, Pixs),
+    modificarCoordenadaAux2(RestV, Pixs, NewPixs),
+    replace(Imagen, 2, NewPixs, NewImagen).
+
 
 %------------------------------------------------------------------------------------------------------------------------------
 
@@ -166,73 +200,11 @@ flipV(Imagen, ImagenV):-
 % Dominio: Imagen X Imagen X Entero X Entero X Entero X Entero
 % Imagen: Imagen a recortar. Imagen: Imagen recortada. Entero: Coordenada X del pixel. Entero: Coordenada Y del pixel. Entero: Ancho del recorte. Entero: Alto del recorte.
 
-% Recursión
-cropAux([], _, _, _, _, []) :- !.
 
-cropAux([H|T], X, Y, W, H, [H|NT]) :-
-    getbyIndex(0, H, X),
-    getbyIndex(1, H, Y),
-    cropAux(T, X, Y, W, H, NT).
-
-cropAux([H|T], X, Y, W, H, NT) :-
-    getbyIndex(0, H, X),
-    getbyIndex(1, H, Y),
-    cropAux(T, X, Y, W, H, NT).
-
-imageCrop(Imagen, X, Y, W, H, ImagenC) :-
-    getbyIndex(2, Imagen, Pixs), 
-    cropAux(Pixs, X, Y, W, H, PixsC),
-    ImagenC = [H,W,PixsC].
 
 %------------------------------------------------------------------------------------------------------------------------------
 
-%9 - TDA image - Rotate / imageRotate90:
-
-% Descripción: Predicado que rota una imagen en base a un ángulo.
-% Dominio: Imagen X Imagen
-% Imagen: Imagen a rotar. Imagen: Imagen rotada. Entero: Ángulo de rotación.
-
-% Rotación en 90° es (x,y) = (-y,x).
-
-rotate90(Imagen, ImagenR) :-
-    getbyIndex(2, Imagen, Pixs),
-    getbyIndex(0, Pixs, OldX),
-    getbyIndex(1, Pixs, OldY),
-    NewX is -OldY,
-    NewY is OldX,
-    replace(OldX, NewX, Pixs, NewPixs),
-    replace(OldY, NewY, NewPixs, PixsR),
-    ImagenR = [Altura,Anchura,PixsR].
-
-% Se añaade la rotación en 180° y 270° para agregar predicados de mayor complejidad. Estos no son necesarios para el funcionamiento 
-% del programa, pero se agregan para tener una mayor variedad de predicados.
-% Rotación en 180° es (x,y) = (-x,-y).
-
-rotate180(Imagen, ImagenR) :-
-    getbyIndex(2, Imagen, Pixs),
-    getbyIndex(0, Pixs, OldX),
-    getbyIndex(1, Pixs, OldY),
-    NewX is -OldX,
-    NewY is -OldY,
-    replace(OldX, NewX, Pixs, NewPixs),
-    replace(OldY, NewY, NewPixs, PixsR),
-    ImagenR = [Altura,Anchura,PixsR].
-
-% Rotación en 270° es (x,y) = (y,-x).
-
-rotate270(Imagen, ImagenR) :-
-    getbyIndex(2, Imagen, Pixs),
-    getbyIndex(0, Pixs, OldX),
-    getbyIndex(1, Pixs, OldY),
-    NewX is OldY,
-    NewY is -OldX,
-    replace(OldX, NewX, Pixs, NewPixs),
-    replace(OldY, NewY, NewPixs, PixsR),
-    ImagenR = [Altura,Anchura,PixsR].
-
-%------------------------------------------------------------------------------------------------------------------------------
-
-%10 - TDA image - imgRGBtoHex / imageRGBtoHex:
+%9 - TDA image - imgRGBtoHex / imageRGBtoHex:
 
 % Descripción: Predicado que convierte una imagen RGB a Hex.
 % Dominio: Imagen X Imagen
@@ -249,8 +221,6 @@ rotate270(Imagen, ImagenR) :-
 % Hex = [FF]
 
 % Se creara los casos bases para un predicado que permita tranformar un decimal a Hex.
-
-% Recursión
 byteToHex(0, 0) :- !.
 byteToHex(1, 1) :- !.
 byteToHex(2, 2) :- !.
@@ -261,42 +231,93 @@ byteToHex(6, 6) :- !.
 byteToHex(7, 7) :- !.
 byteToHex(8, 8) :- !.
 byteToHex(9, 9) :- !.
-byteToHex(10, A) :- !.
-byteToHex(11, B) :- !.
-byteToHex(12, C) :- !.
-byteToHex(13, D) :- !.
-byteToHex(14, E) :- !.
-byteToHex(15, F) :- !.
+byteToHex(10, 'A') :- !.
+byteToHex(11, 'B') :- !.
+byteToHex(12, 'C') :- !.
+byteToHex(13, 'D') :- !.
+byteToHex(14, 'E') :- !.
+byteToHex(15, 'F') :- !.
 
-% Recursión
 byteToHex(Decimal, Hex) :-
     Decimal > 15,
     Div is Decimal / 16,
     Decimal1 is floor(Div),
     Decimal2 is (Div - Decimal1) * 16,
+    round(Decimal2, Decimal3),
     byteToHex(Decimal1, Hex1),
-    byteToHex(Decimal2, Hex2),
+    byteToHex(Decimal3, Hex2),
     atom_concat(Hex1, Hex2, Hex).
 
 % Recursión
 rgbToHex([], []) :- !.
-
 rgbToHex([H|T], [H1|T1]) :-
-    getbyIndex(0, H, R),
-    getbyIndex(1, H, G),
-    getbyIndex(2, H, B),
+    getbyIndex(0, H, X),
+    getbyIndex(1, H, Y),
+    getbyIndex(2, H, R),
+    getbyIndex(3, H, G),
+    getbyIndex(4, H, B),
+    getbyIndex(5, H, Depth),
     byteToHex(R, R1),
     byteToHex(G, G1),
     byteToHex(B, B1),
     atom_concat(R1, G1, RG),
-    atom_concat(RG, B1, H1),
+    atom_concat(RG, B1, Hex),
+    pixhex(X, Y, Hex, Depth, H1),
     rgbToHex(T, T1).
 
 imageRGBtoHex(Imagen, ImagenHex) :-
     getbyIndex(2, Imagen, Pixs),
     rgbToHex(Pixs, PixsH),
-    ImagenHex = [Altura,Anchura,PixsH].
+    getAnchura(Imagen, Anchura),
+    getAltura(Imagen, Altura),
+    ImagenHex = [Anchura,Altura,PixsH].
 
+%------------------------------------------------------------------------------------------------------------------------------
+
+%10 - TDA image - to histogram / imageToHistogram:
+
+% Descripción: Predicado que convierte una imagen a un histograma.
+% Dominio: Imagen X Histograma
+% Imagen: Imagen a convertir. Histograma: Histograma de la imagen.
+
+% Recomendacciones:
+% - Reconocer cuantos colores hay.
+% - Crear un predicado que permita contar cuantas veces aparece un color en la imagen.
+% 
+
+
+
+
+
+%------------------------------------------------------------------------------------------------------------------------------
+
+%11 - TDA image - Rotate / imageRotate90:
+
+% Descripción: Predicado que rota una imagen en base a un ángulo.
+% Dominio: Imagen X Imagen
+% Imagen: Imagen a rotar. Imagen: Imagen rotada. Entero: Ángulo de rotación.
+
+% Rotación en 90° es (x,y) = (-y,x).
+rotate90Aux(Pix, NewPix) :-
+    getbyIndex(0, Pix, X),
+    getbyIndex(1, Pix, Y),
+    NewX is -Y,
+    NewY is X,
+    replace(Pix, 0, NewX, NewPix1),
+    replace(NewPix1, 1, NewY, NewPix), !.
+
+rotate90Aux2([], []) :- !.
+rotate90Aux2([H|T], [H1|T1]) :-
+    rotate90Aux(H, NewPix),
+    H1 = NewPix,
+    rotate90Aux2(T, T1).
+
+rotate90(Imagen, ImagenR) :-
+    getbyIndex(2, Imagen, Pixs),
+    rotate90Aux2(Pixs, PixsR),
+    getAltura(Imagen, Altura),
+    getAnchura(Imagen, Anchura),
+    ImagenR = [Anchura,Altura,PixsR].
 %------------------------------------------------------------------------------------------------------------------------------
 
 % Ejemplos de uso
@@ -307,6 +328,25 @@ ejemploImage(X) :-
     pixbit(1, 1, 1, 4, PD),
     imagen(2, 2, [PA, PB, PC, PD], X).
 
+ejemploImage2(X) :-
+    pixhex( 0, 0, '#FF0000', 20, PA), 
+    pixhex( 0, 1, '#FF0000', 20, PB), 
+    pixhex( 0, 2, '#FF0000', 20, PC), 
+    pixhex( 1, 0, '#0000FF', 30, PD), 
+    pixhex( 1, 1, '#0000FF', 4, PE), 
+    pixhex( 1, 2, '#0000FF', 4, PF), 
+    pixhex( 2, 0, '#0000FF', 4, PG), 
+    pixhex( 2, 1, '#0000FF', 4, PH), 
+    pixhex( 2, 2, '#0000FF', 4, PI),
+    imagen(3, 3, [PA, PB, PC, PD, PE, PF, PG, PH, PI], X).
+
+ejemploImage3(X) :-
+    pixrgb(0, 0, 200, 200, 200, 10, PA),
+    pixrgb(0, 1, 200, 200, 200, 20, PB),
+    pixrgb(1, 0, 190, 190, 190, 30, PC),
+    pixrgb(1, 1, 190, 190, 190, 4, PD),
+    imagen(2, 2, [PA, PB, PC, PD], X).
+
 ejemploisBitMap() :-
     ejemploImage(X),
     isBitmap(X).
@@ -314,29 +354,3 @@ ejemploisBitMap() :-
 ejemploIsPixBit() :-
     pixbit(0, 0, 1, 10, PA),
     isPixbit(PA).
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
