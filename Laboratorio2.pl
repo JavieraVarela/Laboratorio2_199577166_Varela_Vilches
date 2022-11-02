@@ -20,6 +20,11 @@ replace(L, _, _, L).
 append_final([], X, [X]).
 append_final([H|T], X, [H|L]) :- append_final(T, X, L).
 
+% Descripción: Predicado que verifica si un elemento está en una lista.
+% Dominio: Lista X Lista
+mymember(L, [L|_]).
+mymember(L, [_|L1]) :- mymember(L, L1).
+
 % Descripción: Obtener un elemento de una lista por su índice
 % Dominio: Lista X Indice X Elemento
 getbyIndex(0, [X], X) :- !.
@@ -28,16 +33,28 @@ getbyIndex(I, [_|T], E) :-
     NuevoIndex is I-1, 
     getbyIndex(NuevoIndex, T, E), !.
 
-% Descripción: Predicado que agrega un elemento al final de una lista.
-% Dominio: Lista X any X Lista
-append_final([], X, [X]).
-append_final([H|T], X, [H|L]) :- append_final(T, X, L).
 
 % Descripción: Predicado que elimina el elemento posicionado al final de una lista.
 % Dominio: Lista X Lista
 deleteLastElement([_], []) :- !.
 deleteLastElement([Head, Next|Tail], [Head|NTail]):-
   deleteLastElement([Next|Tail], NTail).
+
+removerOcurrencias(_, [], []) :- !.
+removerOcurrencias(X, [X|Xs], Y) :- !, removerOcurrencias(X, Xs, Y).
+removerOcurrencias(X, [T|Xs], Y) :- !, removerOcurrencias(X, Xs, Z), append([T], Z, Y).
+
+removerElemento(_, [], []) :- !.
+removerElemento(R, [R|T], T) :- !.
+removerElemento(R, [H|T], [H|T2]) :- H \= R, removerElemento(R, T, T2).
+
+removerDuplicados([], []) :- !.
+removerDuplicados([H|T], X) :-
+    mymember(H, T), !,
+    removerDuplicados(T, X).
+removerDuplicados([H|T], [H|T2]) :-
+    removerDuplicados(T, T2).
+
 
 %------------------------------------------------------------------------------------------------------------------------------
 
@@ -362,7 +379,7 @@ newcoordV(RestV, Pix, NewY):-
 % Descripción: Permite modificar la coordenada Y de un pixel.
 % Dominio: Entero X Lista X Lista
 modificarCoordenadaAuxV(RestV, Pix, NewPix) :-
-    newcoordV(RestV, NewY),
+    newcoordV(RestV, Pix, NewY),
     replace(Pix, 1, NewY, NewPix), !.
 
 % Descripción: Predicado que permite realizar la recursión con todos los elementos de una lista.
@@ -409,13 +426,9 @@ flipV(Imagen, NewImagen) :-
 cropAux1(Pix, X1, Y1, X2, Y2, Newpix):-
     getbyIndex(0, Pix, X),
     getbyIndex(1, Pix, Y),
-    X >= X1,
-    X =< X2,
-    Y >= Y1,
-    Y =< Y2,
-    Newpix = Pix, !.
+    (X >= X1, X =< X2, Y >= Y1, Y =< Y2 -> Newpix = Pix ; Newpix = []).
 
-%Descripción: Predicado que permite realizar la recursión con todos los elementos de una lista.
+% Descripción: Predicado que permite realizar la recursión con todos los elementos de una lista.
 % Dominio: Lista X Entero X Entero X Entero X Entero X Lista
 cropAux2([], _, _, _, _, []) :- !.
 cropAux2([H|T], X1, Y1, X2, Y2, [NewH|NewT]) :-
@@ -424,13 +437,12 @@ cropAux2([H|T], X1, Y1, X2, Y2, [NewH|NewT]) :-
 
 % Predicado final que envuelve la recursión. Otorga una nueva imagenes con la nueva anchura, altura y lista de pixeles.
 crop(Imagen, X1, Y1, X2, Y2, NewImagen) :-
-    getAltura(Imagen, Altura),
-    getAnchura(Imagen, Anchura),
     getbyIndex(2, Imagen, Pixs),
     cropAux2(Pixs, X1, Y1, X2, Y2, NewPixs),
+    removerOcurrencias([], NewPixs, NewPixs2),
     NewAltura is Y2 - Y1,
     NewAnchura is X2 - X1,
-    NewImagen = [NewAltura, NewAnchura, NewPixs].
+    NewImagen = [NewAltura, NewAnchura, NewPixs2].
 
 %------------------------------------------------------------------------------------------------------------------------------
 
@@ -536,20 +548,27 @@ countColor([H|T], Color, Count):-
 countColor([_|T], Color, Count):-
     countColor(T, Color, Count).
 
+getColors([], []) :- !.
+getColors([H|T], [H1|T1]) :-
+    getbyIndex(2, H, Color),
+    H1 = Color,
+    getColors(T, T1).
+
 % Descripción: Predicado que permite realizar la recursión con todos los elementos de la lista de pix.
 % Dominio: Lista X Lista.
-histogramaux([],[]):-!
-histogramaux([H|T],[H1|T1]):-
-    getbyIndex(2, H, Color),
-    countColor([H|T], Color, Count),
-    H1 = [Color, Count],
-    delete([H|T], H, NewT),
-    histogramaux(NewT, T1).
+histogramaux(_,[],[]) :- !.
+histogramaux(Pixs, [H|T], [H1|T1]) :-
+    countColor(Pixs, H, Count),
+    H1 = [H, Count],
+    histogramaux(Pixs, T, T1).
 
 % Predicado final que envuelve la recursión. Se obitiene el mayor numero entregando el histograma.
 imageToHistogram(Imagen, Histograma):-
-    getbyIndex(2, Imagen, Pixs),
-    histogramaux(Pixs, Histograma).
+    (isRGBmap(Imagen) -> imageRGBtoHex(Imagen, ImagenHex) ; ImagenHex = Imagen),
+    getbyIndex(2, ImagenHex, Pixs),
+    getColors(Pixs, Colors1),
+    removerDuplicados(Colors1, Colors2),
+    histogramaux(Pixs, Colors2, Histograma).
 
 %------------------------------------------------------------------------------------------------------------------------------
 
@@ -584,37 +603,18 @@ rotate90(Imagen, ImagenR) :-
     ImagenR = [Anchura,Altura,PixsR].
 %------------------------------------------------------------------------------------------------------------------------------
 
-% Ejemplos de uso
-ejemploImage(X) :-
-    pixbit(0, 0, 1, 10, PA),
-    pixbit(0, 1, 0, 20, PB),
-    pixbit(1, 0, 0, 30, PC),
-    pixbit(1, 1, 1, 4, PD),
-    imagen(2, 2, [PA, PB, PC, PD], X).
+% 12 - TDA image - Compress / imageCompress:
 
-ejemploImage2(X) :-
-    pixhex( 0, 0, '#FF0000', 20, PA), 
-    pixhex( 0, 1, '#FF0000', 20, PB), 
-    pixhex( 0, 2, '#FF0000', 20, PC), 
-    pixhex( 1, 0, '#0000FF', 30, PD), 
-    pixhex( 1, 1, '#0000FF', 4, PE), 
-    pixhex( 1, 2, '#0000FF', 4, PF), 
-    pixhex( 2, 0, '#0000FF', 4, PG), 
-    pixhex( 2, 1, '#0000FF', 4, PH), 
-    pixhex( 2, 2, '#0000FF', 4, PI),
-    imagen(3, 3, [PA, PB, PC, PD, PE, PF, PG, PH, PI], X).
+% Descripción: Predicado que comprime una imagen.
+% Para comprimir una imagen se busca los pixeles que más se repiten y se elimian. Las imagenes comprimidas solo se pueden trabajar
+% con los demás predicados si es descomprimida antes.
+% Dominio: Imagen X Imagen
 
-ejemploImage3(X) :-
-    pixrgb(0, 0, 200, 200, 200, 10, PA),
-    pixrgb(0, 1, 200, 200, 200, 20, PB),
-    pixrgb(1, 0, 190, 190, 190, 30, PC),
-    pixrgb(1, 1, 190, 190, 190, 4, PD),
-    imagen(2, 2, [PA, PB, PC, PD], X).
 
-ejemploisBitMap() :-
-    ejemploImage(X),
-    isBitmap(X).
 
-ejemploIsPixBit() :-
-    pixbit(0, 0, 1, 10, PA),
-    isPixbit(PA).
+
+
+
+
+
+%------------------------------------------------------------------------------------------------------------------------------
