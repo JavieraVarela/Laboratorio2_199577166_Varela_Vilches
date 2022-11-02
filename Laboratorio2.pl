@@ -606,15 +606,80 @@ rotate90(Imagen, ImagenR) :-
 % 12 - TDA image - Compress / imageCompress:
 
 % Descripción: Predicado que comprime una imagen.
-% Para comprimir una imagen se busca los pixeles que más se repiten y se elimian. Las imagenes comprimidas solo se pueden trabajar
-% con los demás predicados si es descomprimida antes.
+% Para comprimir una imagen se busca los pixeles que más se repiten y se guardan en una nueva lista (Esto para recuperarlos en 
+% un futuro). Las imagenes comprimidas solo se pueden trabajar con los demás predicados si es descomprimida antes.
 % Dominio: Imagen X Imagen
+% Imagen: Imagen a comprimir. Imagen: Imagen comprimida.
 
+% Descripción: Predicado que permite obtener el elemento que menos se repite en una lista.
+% Dominio: Lista X Elemento
+% Lista: Lista de la cual se quiere obtener el elemento que menos se repite. Elemento: Elemento que menos se repite en la lista.
 
+lessFrequent([H|T], Element) :-
+    lessFrequentAux(T, H, Element).
 
+lessFrequentAux([], Element, Element) :- !.
+lessFrequentAux([H|T], Element, Element1) :-
+    getbyIndex(1, H, Count),
+    getbyIndex(1, Element, Count1),
+    Count < Count1,
+    lessFrequentAux(T, H, Element1), !.
 
+lessFrequentAux([_|T], Element, Element1) :-
+    lessFrequentAux(T, Element, Element1).
 
+% Descripción: Predicado que permite almacenar el elemento que menos se repite en una lista.
+% Dominio: Elemento X Lista X Lista
 
+lessFrequentAux2(Element, [], [Element]) :- !.
 
+% Descripción: Predicado que envuelve la recursión anterior para poder comprimir las imagenes a traves de los pix.
+% Dominio: Imagen X compressimagen
+
+compressAux([], []) :- !.
+compressAux([H|T], [H1|T1]) :-
+    lessFrequent(H, Element),
+    lessFrequentAux2(Element, H, H2),
+    H1 = H2,
+    compressAux(T, T1).
+
+compress(Imagen, CompressImagen) :-
+    getbyIndex(2, Imagen, Pixs),
+    compressAux(Pixs, PixsR),
+    CompressImagen = [Imagen, PixsR].
 
 %------------------------------------------------------------------------------------------------------------------------------
+
+% 13 - TDA image - changePixel / imageChangePixel:
+
+% Descripción: Predicado que permite cambiar un pixel de una imagen.
+% Dominio: Imagen X Pix X Imagen.
+% Imagen: Imagen a la cual se le quiere cambiar el pixel. Pix: Pixel que se quiere cambiar. Imagen: Imagen con el pixel cambiado.
+
+% Nota: El pixel remplazado debe tener en consideración el tipo de imagen. Si es una imagen del tipo bit, debe verificar a traves 
+% del predicado isPixbit que el pixel sea de tipo bit. Si es una imagen del tipo RGB, debe verificar a traves del predicado 
+% isPixRGB que el pixel sea de tipo RGB. Si es una imagen del tipo Hex, debe verificar a traves del predicado isHex que el 
+% pixel sea de tipo Hex.
+
+modificarPix(_, [], []) :- !.
+modificarPix(Pix, [H|T], [H1|T1]) :-
+    getbyIndex(0, H, X),
+    getbyIndex(1, H, Y),
+    getbyIndex(0, Pix, X1),
+    getbyIndex(1, Pix, Y1),
+    X == X1,
+    Y == Y1,
+    H1 = Pix,
+    modificarPix(Pix, T, T1), !.
+
+modificarPix(Pix, [H|T], [H1|T1]) :-
+    H1 = H,
+    modificarPix(Pix, T, T1).
+
+changePixel(Imagen, Pix, ImagenR) :-
+    getbyIndex(2, Imagen, Pixs),
+    modificarPix(Pix, Pixs, PixsR),
+    ImagenR = [Imagen, PixsR].
+
+%------------------------------------------------------------------------------------------------------------------------------
+
