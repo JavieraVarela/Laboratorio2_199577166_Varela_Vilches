@@ -101,7 +101,7 @@ y altura de la imagen, además de una lista de listas que almacena los pixeles d
     - flipV(Imagen, NewImagen)                                          Aridad: 2.
     - CropAux1(Pix, X1, Y1, X2, Y2, NewPix)                             Aridad: 6.
     - CropAux2(Pix, X1, Y1, X2, Y2, NewPix)                             Aridad: 6.
-    - Crop(Imagen, X1, Y1, X2, Y2, NewImagen)                            Aridad: 6.
+    - Crop(Imagen, X1, Y1, X2, Y2, NewImagen)                           Aridad: 6.
     - byteToHex(Byte, Hex)                                              Aridad: 2.
     - rgbToHex([H|T], [H1|T1])                                          Aridad: 2.
     - imageRGBtoHex(Image, ImageHex)                                    Aridad: 2.
@@ -111,6 +111,17 @@ y altura de la imagen, además de una lista de listas que almacena los pixeles d
     - rotate90Aux(Pix, NewPix)                                          Aridad: 2.
     - rotate90Aux2([H|T], [H1|T1])                                      Aridad: 2.
     - rotate90(Imagen, NewImagen)                                       Aridad: 2.
+    - lessFrequent([H|T], Element)                                      Aridad: 2.
+    - lessFrequentAux([], Element, Element)                             Aridad: 3.
+    - compressAux([H|T], [H1|T1])                                       Aridad: 2.
+    - compress(Imagen, CompressImagen)                                  Aridad: 2.
+    - modificarPix(Pix, [H|T], [H1|T1])                                 Aridad: 3.
+    - modificarPix2(Pix, [H|T], [H1|T1])                                Aridad: 3.
+    - changePixel(Imagen, Pix, ImagenR)                                 Aridad: 3.
+    - modificarRGB(Pix, NewR, NewG, NewB)                               Aridad: 4.
+    - modificarRGBaux(Pix, NewPix)                                      Aridad: 2.
+    - modificarRGBaux2([H|T], [NewH|NewT])                              Aridad: 2.
+    - invertColorRGB(Imagen, NewImagen)                                 Aridad: 2.
     */
 
 /* Metas primarias:
@@ -124,7 +135,10 @@ y altura de la imagen, además de una lista de listas que almacena los pixeles d
     - imageRGBtoHex.
     - imageToHistogram.
     - rotate90.
-*/
+    - compress.
+    - changePixel.
+    - invertColorRGB. 
+    */
 
 /* Metas segundarias:
     - getAnchura.
@@ -156,7 +170,15 @@ y altura de la imagen, además de una lista de listas que almacena los pixeles d
     - histogramaux.
     - rotate90Aux.
     - rotate90Aux2.
-*/
+    - lessFrequent.
+    - lessFrequentAux.
+    - compressAux.
+    - modificarPix.
+    - modificarPix2.
+    - modificarRGB.
+    - modificarRGBaux.
+    - modificarRGBaux2.
+    */
 
 % Clausulas:
 
@@ -405,21 +427,6 @@ flipV(Imagen, NewImagen) :-
 % Dominio: Imagen X Entero X Entero X Entero X Entero X Imagen
 % Imagen: Imagen a recortar. Entero: Coordenada X1 del pixel. Entero: Coordenada Y1 del pixel. Entero: Coordenada X2 del pixel. Entero: Coordenada Y2 del pixel.
 % Imagen: Imagen recortada.
-
-% Nota: 
-% -Se asume que el pixel está dentro de la imagen.
-% -Se asume que el recorte no sobrepasa los límites de la imagen.
-
-% Para lograr esto, se debe obtener la altura y anchura de la imagen, y luego se debe obtener la altura y anchura del recorte. Luego se debe obtener la coordenada 
-% X1 y Y1 del pixel, y con esto se debe obtener la coordenada X2 y Y2 del pixel. Finalmente, se debe obtener la lista de pixeles de la imagen, y con esto se debe 
-% obtener la lista de pixeles del recorte.
-% Para obtener la lista de pixeles del recorte, se debe recorrer la lista de pixeles de la imagen, y con cada pixel se debe verificar si está dentro del recorte. 
-% Si está dentro del recorte, se debe agregar a la lista de pixeles del recorte. Finalmente, se debe crear la imagen recortada con la lista de pixeles del recorte.
-% Para verificar si un pixel está dentro del recorte, se debe obtener la coordenada X y Y del pixel, y con esto se debe verificar si está dentro del recorte. 
-% Para esto, se debe verificar si la coordenada X está entre X1 y X2, y si la coordenada Y está entre Y1 y Y2.
-
-% Si la imagen recortada no tiene origen en las cordenadas (0,0), se debe realiar un traslado de la imagen recortada.
-% Si la imagen recortada no tiene pixeles, se debe crear una imagen vacía.
 
 % Descripción: Predicado que permite obtener los pixeles de una imagen que están dentro de un recorte.
 % Dominio: Lista X Entero X Entero X Entero X Entero X Lista
@@ -672,14 +679,77 @@ modificarPix(Pix, [H|T], [H1|T1]) :-
     H1 = Pix,
     modificarPix(Pix, T, T1), !.
 
-modificarPix(Pix, [H|T], [H1|T1]) :-
+modificarPix2(Pix, [H|T], [H1|T1]) :-
     H1 = H,
     modificarPix(Pix, T, T1).
 
 changePixel(Imagen, Pix, ImagenR) :-
     getbyIndex(2, Imagen, Pixs),
-    modificarPix(Pix, Pixs, PixsR),
+    modificarPix2(Pix, Pixs, PixsR),
     ImagenR = [Imagen, PixsR].
 
 %------------------------------------------------------------------------------------------------------------------------------
+
+%14 - TDA image - invertColorRGB / imageinvertColorRGB:
+
+% Descripción: Predicado que permite obtener el color simetricamente opuesto en cada canal dentro de un pixel.
+% Dominio: PixRGB.
+% Recorrido: PixRGB.
+
+% Nota: Una referencia para el color simetricamente opuesto:
+% 0 -> 255
+% 1 -> 254
+% 2 -> 253
+
+% Una solución matematica para este caso es tomar el valor maximo correspondiente a 255 y restarle el valor contenido en las variables
+% R, G y B.
+% Ejemplo:  pixrgb(1, 1, 190 (R), 0 (G), 234 (B), 255, PD)
+% 255 - 190 = 65.
+% 255 - 0 = 255.
+% 255 - 255 = 0.
+% De esta forma se planea obtener el valor opuesto del RGB.
+
+/*
+pixrgb(X,Y,R,G,B,Depth,Pix):-
+    integer(X),
+    integer(Y),
+    c(R),
+    c(G),
+    c(B),
+    integer(Depth),
+    Pix = [X,Y,R,G,B,Depth], !.
+*/
+
+% Descripción: Predicado que permite encontrar el valor simetricamente opuesto de cada variable RGB dentro de un Pix.
+% Dominio: Pix X Entero X Entero X Entero.
+
+modificarRGB(Pix, NewR, NewG, NewB):-
+    getbyIndex(2, Pix, R),
+    getbyIndex(3, Pix, G),
+    getbyIndex(4, Pix, B),
+    NewR is 255 - R,
+    NewG is 255 - G,
+    NewB is 255 - B.
+
+% Descripción: Predicado que permite remplazar el valor obtenido en cada RGB por su opuesto simetrico.
+% Dominio: Pix X pix.
+modificarRGBaux(Pix, NewPix):-
+    modificarRGB(Pix, NewR, NewG, NewB),
+    replace(Pix, 2, NewR, NewPix),
+    replace(Pix, 3, NewG, NewPix),
+    replace(Pix, 4, NeWB, NewPix), !.
+
+% Descripción: Predicado que permite la recursión en cada uno de los pixeles de la lista.
+% Dominio: Lista X Lista.
+modificarRGBaux2([], []):- !.
+modificarRGBaux2([H|T], [NewH|NewT]):-
+    modificarRGBaux(H, NewH),
+    modificarRGBaux(T, NewT).
+
+% Predicado final que permite crear una imagen con los nuevos Pix modificados.
+invertColorRGB(Imagen, NewImagen):-
+    modificarRGB(Imagen, NewR, NewG, NewB),
+    getbyIndex(2,Imagen, Pixs).
+    modificarRGBaux2(Pixs, NewPixs).
+    replace(Imagen, 2, Newpixs, NewImagen).
 
