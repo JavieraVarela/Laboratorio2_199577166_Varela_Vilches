@@ -1,3 +1,7 @@
+:- include('pixbitTDA.pl').
+:- include('pixhexTDA.pl').
+:- include('pixrgbTDA.pl').
+
 % -------------------------------------------------------------
 % |Predicados no relacionados a TDAs (Auxiliares)             |
 % -------------------------------------------------------------
@@ -75,14 +79,7 @@ y altura de la imagen, además de una lista de listas que almacena los pixeles d
     - imagen(Anchura, Altura, Pix, Imagen)                              Aridad: 4.
     - getAnchura(Imagen, Anchura)                                       Aridad: 2.
     - getAltura(Imagen, Altura)                                         Aridad: 2.
-    - getPix(Imagen, Pix)                                               Aridad: 2. 
-    - pixbit(X,Y,Bit,Depth,Pix)                                         Aridad: 5.  
-    - isPixBit(Pix)                                                     Aridad: 1.
-    - c(X)                                                              Aridad: 1.
-    - pixrgb(X, Y, R, G, B, Depth, Pix)                                 Aridad: 7.
-    - isPixRGB(Pix)                                                     Aridad: 1.
-    - pixHex(X, Y, Hex, Depth, Pix)                                     Aridad: 5.
-    - isPixHex(Pix)                                                     Aridad: 1.
+    - getPix(Imagen, Pix)                                               Aridad: 2.   
     - isBitmapAux([Lista])                                              Aridad: 1.
     - isBitmap(Imagen)                                                  Aridad: 1.
     - isRGBmapAux([Lista])                                              Aridad: 1.
@@ -102,8 +99,6 @@ y altura de la imagen, además de una lista de listas que almacena los pixeles d
     - CropAux1(Pix, X1, Y1, X2, Y2, NewPix)                             Aridad: 6.
     - CropAux2(Pix, X1, Y1, X2, Y2, NewPix)                             Aridad: 6.
     - Crop(Imagen, X1, Y1, X2, Y2, NewImagen)                           Aridad: 6.
-    - byteToHex(Byte, Hex)                                              Aridad: 2.
-    - rgbToHex([H|T], [H1|T1])                                          Aridad: 2.
     - imageRGBtoHex(Image, ImageHex)                                    Aridad: 2.
     - countColor(Pix, Color, Count)                                     Aridad: 3.
     - histogramaux([H|T], [H1|T1])                                      Aridad: 2.
@@ -144,13 +139,6 @@ y altura de la imagen, además de una lista de listas que almacena los pixeles d
     - getAnchura.
     - getAltura.
     - getPix.
-    - pixbit.
-    - isPixBit.
-    - c.
-    - pixrgb.
-    - isPixRGB.
-    - pixHex.
-    - isPixHex.
     - isBitmapAux.
     - isRGBmapAux.
     - isHexmapAux.
@@ -164,8 +152,6 @@ y altura de la imagen, además de una lista de listas que almacena los pixeles d
     - modificarCoordenadaAux2V.
     - CropAux1.
     - CropAux2.
-    - byteToHex.
-    - rgbToHex.
     - countColor.
     - histogramaux.
     - rotate90Aux.
@@ -191,6 +177,8 @@ imagen(Anchura,Altura,Pix,Imagen):-
     integer(Anchura),
     Imagen = [Anchura,Altura,Pix].
 
+%Selectores para el TDA Imagen:
+
 % Descripción: Predicado que obtiene la anchura de una imagen.
 % Dominio: Imagen X Anchura.
 getAnchura(Imagen, Anchura) :-
@@ -205,73 +193,6 @@ getAltura(Imagen, Altura) :-
 % Dominio: Imagen X Pix.
 getPix(Imagen, Pix) :-
     getbyIndex(2, Imagen, Pix).
-
-
-%Pix necesarios:
-
-% pix1: pixbit
-
-% Descripción: Predicado que permite obtener la estrucura de un pixbit.
-% Dominio: Entero X Entero X Entero X Entero X Pixbit.
-pixbit(X,Y,Bit,Depth,Pix):-
-    integer(X),
-    integer(Y),
-    integer(Bit),
-    (Bit =:= 1; Bit =:= 0),
-    integer(Depth),
-    Pix = [X,Y,Bit,Depth], !.
-
-% Descripción: Predicado que permite confirmar si un elemento es un pixbit.
-% Dominio: Pixbit.
-isPixbit(Pix) :-
-    length(Pix, Largo),
-    Largo =:= 4,
-    getbyIndex(2, Pix, X),
-    integer(X).
-
-
-%pix2: pixrgb
-
-% Descripción: Predicado que permite confirmar si un elemento X se encuentra dentro del rango 0 < X < 255.
-% Dominio: Entero.
-c(X):- integer(X), X >= 0, X =< 255.
-
-% Descripción: Predicado que permite obtener la estrucura de un pixrgb.
-% Dominio: Entero X Entero X Entero X Entero X Pixrgb.
-pixrgb(X,Y,R,G,B,Depth,Pix):-
-    integer(X),
-    integer(Y),
-    c(R),
-    c(G),
-    c(B),
-    integer(Depth),
-    Pix = [X,Y,R,G,B,Depth], !.
-
-% Descripción: Predicado que permite confirmar si un elemento es un pixrgb.
-% Dominio: Pix.
-isPixRGB(Pix) :-
-    length(Pix, Largo),
-    Largo =:= 6.
-
-
-%pix3: pixhex
-
-% Descripción: Predicado que permite obtener la estrucura de un pixhex.
-% Dominio: Entero X Entero X Atom X Entero X Pixhex.
-pixhex(X,Y,Hex,Depth,Pix):-
-    integer(X),
-    integer(Y),
-    atom(Hex),
-    integer(Depth),
-    Pix = [X,Y,Hex,Depth], !.
-
-% Descripción: Predicado que permite confirmar si un elemento es un pixhex.
-% Dominio: Pix.
-isHex(Pix) :-
-    length(Pix, Largo),
-    Largo =:= 4,
-    getbyIndex(2, Pix, Hex),
-    atom(Hex).
 
 %------------------------------------------------------------------------------------------------------------------------------
 
@@ -469,54 +390,6 @@ crop(Imagen, X1, Y1, X2, Y2, NewImagen) :-
 % 15 = F
 % Hex = [FF]
 
-% Se creara los casos bases para un predicado que permita tranformar un decimal a Hex.
-byteToHex(0, 0) :- !.
-byteToHex(1, 1) :- !.
-byteToHex(2, 2) :- !.
-byteToHex(3, 3) :- !.
-byteToHex(4, 4) :- !.
-byteToHex(5, 5) :- !.
-byteToHex(6, 6) :- !.
-byteToHex(7, 7) :- !.
-byteToHex(8, 8) :- !.
-byteToHex(9, 9) :- !.
-byteToHex(10, 'A') :- !.
-byteToHex(11, 'B') :- !.
-byteToHex(12, 'C') :- !.
-byteToHex(13, 'D') :- !.
-byteToHex(14, 'E') :- !.
-byteToHex(15, 'F') :- !.
-
-% Descrición: Predicado que permite transformar un decimal a Hex.
-% Dominio: Entero X Entero
-byteToHex(Decimal, Hex) :-
-    Decimal > 15,
-    Div is Decimal / 16,
-    Decimal1 is floor(Div),
-    Decimal2 is (Div - Decimal1) * 16,
-    round(Decimal2, Decimal3),
-    byteToHex(Decimal1, Hex1),
-    byteToHex(Decimal3, Hex2),
-    atom_concat(Hex1, Hex2, Hex).
-
-% Descripción: Predicado que envuelve la recursión. Transforma una lista de bytes RGB a Hex.
-% Dominio: Lista X Lista
-rgbToHex([], []) :- !.
-rgbToHex([H|T], [H1|T1]) :-
-    getbyIndex(0, H, X),
-    getbyIndex(1, H, Y),
-    getbyIndex(2, H, R),
-    getbyIndex(3, H, G),
-    getbyIndex(4, H, B),
-    getbyIndex(5, H, Depth),
-    byteToHex(R, R1),
-    byteToHex(G, G1),
-    byteToHex(B, B1),
-    atom_concat(R1, G1, RG),
-    atom_concat(RG, B1, Hex),
-    pixhex(X, Y, Hex, Depth, H1),
-    rgbToHex(T, T1).
-
 % Descripción: Predicado que envuelve la recursión. Transforma una imagen RGB a Hex.
 % Dominio: Imagen X Imagen
 imageRGBtoHex(Imagen, ImagenHex) :-
@@ -708,17 +581,6 @@ changePixel(Imagen, Pix, ImagenR) :-
 % 255 - 0 = 255.
 % 255 - 255 = 0.
 % De esta forma se planea obtener el valor opuesto del RGB.
-
-/*
-pixrgb(X,Y,R,G,B,Depth,Pix):-
-    integer(X),
-    integer(Y),
-    c(R),
-    c(G),
-    c(B),
-    integer(Depth),
-    Pix = [X,Y,R,G,B,Depth], !.
-*/
 
 % Descripción: Predicado que permite encontrar el valor simetricamente opuesto de cada variable RGB dentro de un Pix.
 % Dominio: Pix X Entero X Entero X Entero.
